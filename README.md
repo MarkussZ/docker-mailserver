@@ -1,6 +1,6 @@
 # docker-mailserver-armhf
 
-Docker-mailserver for Raspberry Pi / armv7 devices.
+Docker-mailserver for Raspberry Pi / armhf devices.
 
 Just some little changes I put together which were provided by [@HolyGuacamole](https://github.com/HolyGuacamole) in this [issue](https://github.com/tomav/docker-mailserver/issues/348)
 
