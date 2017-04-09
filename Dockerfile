@@ -1,4 +1,4 @@
-FROM ubuntu:14.04
+FROM armv7/armhf-ubuntu:14.04
 MAINTAINER Thomas VIAL
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -47,14 +47,18 @@ RUN apt-get update -q --fix-missing && \
     postgrey \
     unzip \
     && \
-  curl -sk http://neuro.debian.net/lists/trusty.de-m.libre > /etc/apt/sources.list.d/neurodebian.sources.list && \
-  apt-key adv --recv-keys --keyserver hkp://pgp.mit.edu:80 0xA5D32F012649A5A9 && \
-  curl https://packages.elasticsearch.org/GPG-KEY-elasticsearch | apt-key add - && \
-  echo "deb http://packages.elastic.co/beats/apt stable main" | tee -a /etc/apt/sources.list.d/beats.list && \
-  apt-get update -q --fix-missing && apt-get -y upgrade fail2ban filebeat && \
+  apt-get update -q --fix-missing && apt-get -y upgrade fail2ban && \
   apt-get autoclean && rm -rf /var/lib/apt/lists/* && \
   rm -rf /usr/share/locale/* && rm -rf /usr/share/man/* && rm -rf /usr/share/doc/* && \
   touch /var/log/auth.log && update-locale
+
+# Install filebeat
+RUN apt-get update && \
+  apt-get -y install wget && \
+  wget https://beats-nightlies.s3.amazonaws.com/jenkins/filebeat/1291-ee07419cd283d5d5f5ebf6081adfd0915100ffcb/filebeat-linux-arm && \
+  mkdir /opt/filebeat && \
+  mv filebeat-linux-arm /opt/filebeat && \
+  chmod +x /opt/filebeat/filebeat-linux-arm
 
 # Enables Clamav
 RUN (echo "0 0,6,12,18 * * * /usr/bin/freshclam --quiet" ; crontab -l) | crontab -
@@ -144,5 +148,9 @@ EXPOSE 25 587 143 993 110 995 4190
 
 CMD /usr/local/bin/start-mailserver.sh
 
+# Run filebeat
 
-ADD target/filebeat.yml.tmpl /etc/filebeat/filebeat.yml.tmpl
+ADD ./target/filebeat.yml.tmpl /etc/filebeat/filebeat.yml.tmpl
+ADD ./target/filebeat.conf /etc/init/filebeat.conf
+
+RUN start filebeat
